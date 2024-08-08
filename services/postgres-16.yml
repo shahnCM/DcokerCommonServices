@@ -9,6 +9,6 @@ postgres-16:
   ports:
     - '0.0.0.0:5432:5432'
   volumes:
-    - ./vol-postgres-16:/var/lib/postgresql/data
+    - ./volumes/vol-postgres-16:/var/lib/postgresql/data
   networks:
     - common

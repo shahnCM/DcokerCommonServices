@@ -10,7 +10,7 @@ rabbitmq:
     - '0.0.0.0:5672:5672'
     - '0.0.0.0:15672:15672'
   volumes:
-    - ./vol-rabbitmq/data:/var/lib/rabbitmq/
-    - ./vol-rabbitmq/log/:/var/log/rabbitmq/
+    - ./volumes/vol-rabbitmq/data:/var/lib/rabbitmq/
+    - ./volumes/vol-rabbitmq/log/:/var/log/rabbitmq/
   networks:
     - common

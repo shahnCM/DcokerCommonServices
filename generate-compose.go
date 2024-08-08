@@ -9,7 +9,7 @@ import (
 
 func main() {
 	servicesPath := "services"
-	outputPath := "compose"
+	outputPath := "./"
 
 	composeFileName := filepath.Join(outputPath, "docker-compose.yml")
 	if err := generateDockerComposeFile(servicesPath, composeFileName); err != nil {

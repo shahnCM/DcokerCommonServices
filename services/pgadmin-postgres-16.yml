@@ -8,6 +8,6 @@ pgadmin-postgres-16:
   ports:
     - '0.0.0.0:8085:80'
   volumes:
-    - ./vol-pgadmin-postgres-16:/var/lib/pgadmin    
+    - ./volumes/vol-pgadmin-postgres-16:/var/lib/pgadmin    
   networks:
     - common
