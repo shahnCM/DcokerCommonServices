@@ -1,0 +1,12 @@
+mongodb-7:
+  image: mongo:7
+  container_name: mongodb-7
+  restart: always
+  ports:
+    - 27017:27017
+  environment:
+    MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME-admin}
+    MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD-admin}
+  volumes:
+    - ./volumes/vol-mongodb-7/data/db:/data/db
+    - ./volumes/vol-mongodb-7/data/configdb:/data/configdb

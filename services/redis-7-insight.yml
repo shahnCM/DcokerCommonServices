@@ -1,0 +1,11 @@
+redis-7-insight:
+  image: redislabs/redisinsight:latest
+  container_name: redis-7-insight
+  restart: always
+  ports:
+    - 5540:5540
+  depends_on:
+    - redis-7
+  volumes:
+    - ./volumes/vol-redis-7-insight:/data
+    

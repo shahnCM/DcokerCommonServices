@@ -1,0 +1,9 @@
+redis-7:
+  image: redis:7
+  container_name: redis-7
+  restart: always
+  ports:
+    - 6379:6379
+  volumes:
+    - ./volumes/vol-redis-7:/data
+    

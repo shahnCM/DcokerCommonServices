@@ -15,6 +15,32 @@ services:
     networks:
       - common
 
+  mongodb-7-express:
+    image: mongo-express:latest
+    container_name: mongodb-7-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME-admin}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD-admin}
+      ME_CONFIG_MONGODB_SERVER: mongodb-7
+    depends_on:
+      - mongodb-7
+
+  mongodb-7:
+    image: mongo:7
+    container_name: mongodb-7
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD-admin}
+    volumes:
+      - ./volumes/vol-mongodb-7/data/db:/data/db
+      - ./volumes/vol-mongodb-7/data/configdb:/data/configdb
+
   pgadmin-postgres-16:
     image: dpage/pgadmin4
     container_name: pgadmin-postgres-16
@@ -76,6 +102,27 @@ services:
       - ./volumes/vol-rabbitmq/log/:/var/log/rabbitmq/
     networks:
       - common
+
+  redis-7-insight:
+    image: redislabs/redisinsight:latest
+    container_name: redis-7-insight
+    restart: always
+    ports:
+      - 5540:5540
+    depends_on:
+      - redis-7
+    volumes:
+      - ./volumes/vol-redis-7-insight:/data
+    
+  redis-7:
+    image: redis:7
+    container_name: redis-7
+    restart: always
+    ports:
+      - 6379:6379
+    volumes:
+      - ./volumes/vol-redis-7:/data
+    
 
 networks:
   common:
