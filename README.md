@@ -7,7 +7,9 @@ This project uses Docker Compose to manage multiple services with configurations
 ## Folder Structure
 
 - `services/` - Contains separate Docker Compose service files.
+- if you don't want any service to add in final docker compose you can add ___`?`___ (eg: `?rabbitmq.yml`) prefix to the file name of that service.
 - `generate-compose.go` - Go program to generate Docker Compose file. Will be generated in compose folder
+- build it using the following command `go build -o generate-compose` & run `./generate-compose`
 - `/.` root folder contains ___.env___ & 
 - `volumes` folder contains volumes associated with different services once we start our services
 - Different level of permission might be needed for volumes associted with different services
