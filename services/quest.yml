@@ -1,0 +1,13 @@
+quest:
+  image: questdb/questdb:latest
+  container_name: quest
+  ports:
+    - "9000:9000"  # HTTP API
+    - "9009:9009"  # InfluxDB Line Protocol
+    - "8812:8812"  # Postgres Wire Protocol
+  environment:
+    QDB_DEBUG: false
+  volumes:
+    - ./volumes/vol-quest:/var/lib/questdb
+  networks:
+    - common

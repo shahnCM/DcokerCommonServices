@@ -1,0 +1,15 @@
+postgres-timescale-16:
+  image: timescale/timescaledb:latest-pg12
+  container_name: postgres-timescale-16
+  restart: unless-stopped
+  environment:
+    POSTGRES_USER: ${DB_POSTGRES_USERNAME-admin}
+    POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD-admin}
+    # POSTGRES_DB: ${DB_POSTGRES_DATABASE}
+  ports:
+    - '0.0.0.0:5433:5432'
+  volumes:
+    - ./volumes/vol-postgres-timescale-16:/var/lib/postgresql/data
+  networks:
+    - common
+    
