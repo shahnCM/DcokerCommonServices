@@ -1,13 +1,13 @@
-pgadmin-postgres-timescale-16:
+pgadmin:
   image: dpage/pgadmin4
-  container_name: pgadmin-postgres-timescale-16
+  container_name: pgadmin
   restart: always
   environment:
     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
   ports:
-    - '0.0.0.0:8086:80'
+    - '0.0.0.0:8085:80'
   volumes:
-    - ./volumes/vol-pgadmin-postgres-timescale-16:/var/lib/pgadmin    
+    - ./volumes/vol-pgadmin:/var/lib/pgadmin    
   networks:
     - common

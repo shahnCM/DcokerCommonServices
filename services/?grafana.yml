@@ -1,0 +1,12 @@
+grafana:
+  image: grafana/grafana:latest
+  container_name: grafana
+  ports:
+    - "3000:3000"  # Grafana Dashboard
+  environment:
+    GF_SECURITY_ADMIN_PASSWORD: "admin"  # Default admin password
+  volumes:
+    - ./volumes/grafana/storage:/var/lib/grafana
+    - ./volumes/grafana/provisioning/:/etc/grafana/provisioning
+  networks:
+    - common

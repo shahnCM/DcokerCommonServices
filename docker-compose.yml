@@ -1,21 +1,6 @@
 version: '3.5'
 services:
 
-  mariadb-10:
-    image: mariadb:10
-    container_name: mariadb-10
-    restart: unless-stopped
-    environment:
-      MYSQL_USER: ${DB_MYSQL_USERNAME-admin}
-      MYSQL_PASSWORD: ${DB_MYSQL_PASSWORD-admin}
-      MYSQL_ROOT_PASSWORD: ${DB_MYSQL_PASSWORD-root}
-    ports:
-      - '0.0.0.0:6010:3306'
-    volumes:
-      - ./volumes/vol-mariadb-10:/var/lib/mysql
-    networks:
-      - common
-
   mongodb-7-express:
     image: mongo-express:latest
     container_name: mongodb-7-express
@@ -42,9 +27,9 @@ services:
       - ./volumes/vol-mongodb-7/data/db:/data/db
       - ./volumes/vol-mongodb-7/data/configdb:/data/configdb
 
-  pgadmin-postgres-16:
+  pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin-postgres-16
+    container_name: pgadmin
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
@@ -52,23 +37,7 @@ services:
     ports:
       - '0.0.0.0:8085:80'
     volumes:
-      - ./volumes/vol-pgadmin-postgres-16:/var/lib/pgadmin    
-    networks:
-      - common
-
-  phpmyadmin-mariadb-10:
-    depends_on:
-      - mariadb-10
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin-mariadb-10
-    restart: always
-    ports:
-      - '0.0.0.0:8180:80'
-    environment:
-      PMA_HOST: mariadb-10
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
-      MYSQL_ROOT_PASSWORD: ${DB_MYSQL_PASSWORD-root}
+      - ./volumes/vol-pgadmin:/var/lib/pgadmin    
     networks:
       - common
 
@@ -81,49 +50,40 @@ services:
       POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD-admin}
       # POSTGRES_DB: ${DB_POSTGRES_DATABASE}
     ports:
-      - '0.0.0.0:5432:5432'
+      - '0.0.0.0:5433:5432'
     volumes:
       - ./volumes/vol-postgres-16:/var/lib/postgresql/data
     networks:
       - common
 
-  rabbitmq:
-    image: rabbitmq:3.8-management-alpine
-    container_name: 'rabbitmq'
+  postgres-timescale-16:
+    image: timescale/timescaledb:latest-pg12
+    container_name: postgres-timescale-16
     restart: unless-stopped
-    environment: 
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER-rabbit}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS-rabbit}
-      RABBITMQ_DEFAULT_VHOST: 'vhost'
+    environment:
+      POSTGRES_USER: ${DB_POSTGRES_USERNAME-admin}
+      POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD-admin}
+      POSTGRES_DB: benchmark
     ports:
-      - '0.0.0.0:5672:5672'
-      - '0.0.0.0:15672:15672'
+      - '0.0.0.0:5432:5432'
     volumes:
-      - ./volumes/vol-rabbitmq/data:/var/lib/rabbitmq/
-      - ./volumes/vol-rabbitmq/log/:/var/log/rabbitmq/
+      - ./volumes/vol-postgres-timescale-16:/var/lib/postgresql/data
     networks:
       - common
-
-  redis-7-insight:
-    image: redislabs/redisinsight:latest
-    container_name: redis-7-insight
-    restart: always
-    ports:
-      - 5540:5540
-    depends_on:
-      - redis-7
-    volumes:
-      - ./volumes/vol-redis-7-insight:/data
     
-  redis-7:
-    image: redis:7
-    container_name: redis-7
-    restart: always
+  quest:
+    image: questdb/questdb:latest
+    container_name: quest
     ports:
-      - 6379:6379
+      - "9000:9000"  # HTTP API
+      - "9009:9009"  # InfluxDB Line Protocol
+      - "8812:8812"  # Postgres Wire Protocol
+    environment:
+      QDB_DEBUG: false
     volumes:
-      - ./volumes/vol-redis-7:/data
-    
+      - ./volumes/vol-quest:/var/lib/questdb
+    networks:
+      - common
 
 networks:
   common:
