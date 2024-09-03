@@ -1,6 +1,47 @@
 version: '3.5'
 services:
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: elasticsearch
+    restart: unless-stopped
+    environment: ['discovery.type=single-node', 'xpack.security.enabled=false', 'xpack.security.enrollment.enabled=false']
+    ports:
+      - 9229:9200
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2.0'
+    volumes:
+      - ${VOL_BASE}/vol-elasticsearch/data:/usr/share/elasticsearch/data
+    networks:
+      - common  
+    
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.2  # Use the appropriate Kibana version
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    deploy:
+      resources:
+        limits:
+          memory: 500M
+          cpus: '0.5'
+    networks:
+      - common
+    depends_on:
+      - elasticsearch
+
   mongodb-7-express:
     image: mongo-express:latest
     container_name: mongodb-7-express
@@ -11,6 +52,11 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME-admin}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD-admin}
       ME_CONFIG_MONGODB_SERVER: mongodb-7
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+          cpus: '0.5'
     depends_on:
       - mongodb-7
 
@@ -23,9 +69,19 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME-admin}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD-admin}
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'  # Limit to 8 CPU threads
+          memory: 1G  # Limit to 10 GB of memory
+        # reservations:
+        #   cpus: '8.0'  # Reserve 8 CPU threads
+        #   memory: 10G  # Reserve 10 GB of memory
     volumes:
-      - ./volumes/vol-mongodb-7/data/db:/data/db
-      - ./volumes/vol-mongodb-7/data/configdb:/data/configdb
+      - ${VOL_BASE}/vol-mongodb-7/data/db:/data/db
+      - ${VOL_BASE}/vol-mongodb-7/data/configdb:/data/configdb
+      # - ${VOL_BASE}/vol-mongodb-7/config/:/etc/mongo/
+    # command: ["mongod", "--config", "/etc/mongo/mongod.conf"]
 
   pgadmin:
     image: dpage/pgadmin4
@@ -37,13 +93,15 @@ services:
     ports:
       - '0.0.0.0:8085:80'
     volumes:
-      - ./volumes/vol-pgadmin:/var/lib/pgadmin    
+      - ${VOL_BASE}/vol-pgadmin:/var/lib/pgadmin    
     networks:
       - common
 
-  postgres-16:
-    image: postgres:16
-    container_name: postgres-16
+  postgres-16-custom:
+    build:
+      context: ${DOCKER_FILES_BASE}/postgres
+      dockerfile: postgres-16-w-gis-extensions.Dockerfile
+    container_name: postgres-16-custom
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_POSTGRES_USERNAME-admin}
@@ -51,39 +109,68 @@ services:
       # POSTGRES_DB: ${DB_POSTGRES_DATABASE}
     ports:
       - '0.0.0.0:5433:5432'
+    deploy:
+      resources:
+        limits:
+          memory: 500M
+          cpus: '1.0'    
     volumes:
-      - ./volumes/vol-postgres-16:/var/lib/postgresql/data
+      - ${VOL_BASE}/vol-postgres-16:/var/lib/postgresql/data
     networks:
       - common
 
-  postgres-timescale-16:
-    image: timescale/timescaledb:latest-pg12
-    container_name: postgres-timescale-16
+  rabbitmq:
+    image: rabbitmq:3.8-management-alpine
+    container_name: 'rabbitmq'
     restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${DB_POSTGRES_USERNAME-admin}
-      POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD-admin}
-      POSTGRES_DB: benchmark
+    environment: 
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER-rabbit}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS-rabbit}
+      RABBITMQ_DEFAULT_VHOST: 'vhost'
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+          cpus: '2.0'
     ports:
-      - '0.0.0.0:5432:5432'
+      - '0.0.0.0:5672:5672'
+      - '0.0.0.0:15672:15672'
     volumes:
-      - ./volumes/vol-postgres-timescale-16:/var/lib/postgresql/data
+      - ${VOL_BASE}/vol-rabbitmq/data:/var/lib/rabbitmq/
+      - ${VOL_BASE}/vol-rabbitmq/log/:/var/log/rabbitmq/
     networks:
       - common
+
+  redis-7-insight:
+    image: redislabs/redisinsight:latest
+    container_name: redis-7-insight
+    restart: always
+    ports:
+      - 5540:5540
+    depends_on:
+      - redis-7
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+          cpus: '0.5'
+    volumes:
+      - ${VOL_BASE}/vol-redis-7-insight:/data
     
-  quest:
-    image: questdb/questdb:latest
-    container_name: quest
+  redis-7:
+    image: redis:7
+    container_name: redis-7
+    restart: always
     ports:
-      - "9000:9000"  # HTTP API
-      - "9009:9009"  # InfluxDB Line Protocol
-      - "8812:8812"  # Postgres Wire Protocol
-    environment:
-      QDB_DEBUG: false
+      - 6379:6379
+    deploy:
+      resources:
+        limits:
+          memory: 20M
+          cpus: '1.0'
     volumes:
-      - ./volumes/vol-quest:/var/lib/questdb
-    networks:
-      - common
+      - ${VOL_BASE}/vol-redis-7:/data
+    
 
 networks:
   common:

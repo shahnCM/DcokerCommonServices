@@ -8,6 +8,6 @@ pgadmin:
   ports:
     - '0.0.0.0:8085:80'
   volumes:
-    - ./volumes/vol-pgadmin:/var/lib/pgadmin    
+    - ${VOL_BASE}/vol-pgadmin:/var/lib/pgadmin    
   networks:
     - common

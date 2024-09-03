@@ -17,7 +17,7 @@ influx:
     #INFLUXDB_HTTP_AUTH_ENABLED: "false"
     #NcO58L2KO5HU1zUi6-3ec_BwTmLqKkcsiAxO0imCzBmvA5gOKzqRWRAU0RTLJxy3N7sm9PVe42bY15RNGiSbRQ==
   volumes:
-    - ./volumes/vol-influx/data:/var/lib/influxdb2
-    - ./volumes/vol-influx/config:/etc/influxdb2
+    - ${VOL_BASE}/vol-influx/data:/var/lib/influxdb2
+    - ${VOL_BASE}/vol-influx/config:/etc/influxdb2
   networks:
     - common

@@ -6,7 +6,7 @@ grafana:
   environment:
     GF_SECURITY_ADMIN_PASSWORD: "admin"  # Default admin password
   volumes:
-    - ./volumes/grafana/storage:/var/lib/grafana
-    - ./volumes/grafana/provisioning/:/etc/grafana/provisioning
+    - ${VOL_BASE}/grafana/storage:/var/lib/grafana
+    - ${VOL_BASE}/grafana/provisioning/:/etc/grafana/provisioning
   networks:
     - common

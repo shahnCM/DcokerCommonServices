@@ -6,6 +6,11 @@ redis-7-insight:
     - 5540:5540
   depends_on:
     - redis-7
+  deploy:
+    resources:
+      limits:
+        memory: 150M
+        cpus: '0.5'
   volumes:
-    - ./volumes/vol-redis-7-insight:/data
+    - ${VOL_BASE}/vol-redis-7-insight:/data
     

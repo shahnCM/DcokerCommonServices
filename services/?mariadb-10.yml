@@ -9,6 +9,6 @@ mariadb-10:
   ports:
     - '0.0.0.0:6010:3306'
   volumes:
-    - ./volumes/vol-mariadb-10:/var/lib/mysql
+    - ${VOL_BASE}/vol-mariadb-10:/var/lib/mysql
   networks:
     - common
