@@ -7,6 +7,11 @@ pgadmin:
     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
   ports:
     - '0.0.0.0:8085:80'
+  deploy:
+    resources:
+      limits:
+        memory: 250M
+        cpus: '1.0'    
   volumes:
     - ${VOL_BASE}/vol-pgadmin:/var/lib/pgadmin    
   networks:
