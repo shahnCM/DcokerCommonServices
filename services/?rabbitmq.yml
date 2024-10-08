@@ -6,6 +6,9 @@ rabbitmq:
     RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER-rabbit}
     RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS-rabbit}
     RABBITMQ_DEFAULT_VHOST: 'vhost'
+  privileged: true  
+  cap_add:
+    - NET_ADMIN    
   deploy:
     resources:
       limits:

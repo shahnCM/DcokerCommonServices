@@ -20,3 +20,5 @@ mongodb-7:
     - ${VOL_BASE}/vol-mongodb-7/data/configdb:/data/configdb
     # - ${VOL_BASE}/vol-mongodb-7/config/:/etc/mongo/
   # command: ["mongod", "--config", "/etc/mongo/mongod.conf"]
+  networks:
+    - common  

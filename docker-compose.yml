@@ -1,70 +1,6 @@
 version: '3.5'
 services:
 
-  awslocalstack:
-    image: localstack/localstack:latest
-    container_name: awslocalstack
-    ports:
-      - "14566:4566"  # Main LocalStack API endpoint (Edge port)
-      - "14510-14559:4510-4559"  # Redirect default service ports to the 14510-14559 range
-    environment:
-      SERVICES: apigateway,cloudformation,cloudwatch,config,dynamodb,dynamodbstreams,ec2,es,events,firehose,iam,kinesis,kms,lambda,logs,redshift,route53,route53resolver,s3,secretsmanager,ses,sns,sqs,ssm,stepfunctions,sts,rds,timestream,transfer
-      GATEWAY_LISTEN: 4566  # Main entry point for the API
-      AWS_ACCESS_KEY_ID: test  # Fake AWS credentials
-      AWS_SECRET_ACCESS_KEY: test  # Fake AWS credentials
-      # - DEFAULT_REGION=us-east-1  # Default AWS region
-    volumes:
-      - "${VOL_BASE}/vol-awslocalstack:/var/lib/localstack"  # Persistent data storage for LocalStack
-      - "/var/run/docker.sock:/var/run/docker.sock"  # Needed for Docker-in-Docker
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-          cpus: '2.0'
-    networks:
-      - common
-    
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
-    container_name: elasticsearch
-    restart: unless-stopped
-    environment: ['discovery.type=single-node', 'xpack.security.enabled=false', 'xpack.security.enrollment.enabled=false']
-    ports:
-      - 9229:9200
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '2.0'
-    volumes:
-      - ${VOL_BASE}/vol-elasticsearch/data:/usr/share/elasticsearch/data
-    networks:
-      - common  
-    
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.12.2  # Use the appropriate Kibana version
-    container_name: kibana
-    environment:
-      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-    ports:
-      - "5601:5601"
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '0.5'
-    networks:
-      - common
-    depends_on:
-      - elasticsearch
-
   mongodb-7-express:
     image: mongo-express:latest
     container_name: mongodb-7-express
@@ -83,6 +19,8 @@ services:
           cpus: '0.5'
     depends_on:
       - mongodb-7
+    networks:
+      - common
 
   mongodb-7:
     image: mongo:7
@@ -106,6 +44,106 @@ services:
       - ${VOL_BASE}/vol-mongodb-7/data/configdb:/data/configdb
       # - ${VOL_BASE}/vol-mongodb-7/config/:/etc/mongo/
     # command: ["mongod", "--config", "/etc/mongo/mongod.conf"]
+    networks:
+      - common  
+
+  nominatim:
+    build:
+      context: ${DOCKER_FILES_BASE}/nominatim
+    container_name: nominatim
+    environment:
+      PBF_PATH: /nominatim/files/bangladesh-latest.osm.pbf
+      NOMINATIM_PASSWORD: postgres
+    volumes:
+      - ${VOL_BASE}/vol-nominatim/files:/nominatim/files
+      - ${VOL_BASE}/vol-nominatim/data:/nominatim/data
+      - ${VOL_BASE}/vol-nominatim/postgres_data:/var/lib/postgresql/12/main
+      - ${VOL_BASE}/vol-nominatim/apache_logs:/var/log/apache2
+      - ${VOL_BASE}/vol-nominatim/nominatim_logs:/var/log/nominatim
+      - ${VOL_BASE}/vol-nominatim/nominatim_settings:/nominatim/settings
+      - ${VOL_BASE}/vol-nominatim/postgresql_conf:/etc/postgresql/12/main/postgresql.conf
+      - ${VOL_BASE}/vol-nominatim/tmp:/tmp/nominatim-tmp
+    ports:
+      - "8083:8080"
+  # deploy:
+  #   resources:
+  #     limits:
+  #       memory: 3G
+  #       cpus: '1.0'   
+    networks:
+      - common  
+
+  osm-tile-server:
+    build:
+      context: ${DOCKER_FILES_BASE}/osm-tile
+    image: overv/openstreetmap-tile-server
+    container_name: osm-tile-server
+    volumes:
+      - ${VOL_BASE}/vol-osm/data:/data/database/
+      - ${VOL_BASE}/vol-osm/tiles:/data/tiles/
+    ports:
+      - "8082:80"
+      - "54320:5432"
+  # deploy:
+  #   resources:
+  #     limits:
+  #       memory: 500M
+  #       cpus: '1.0'   
+    environment:
+      ALLOW_CORS: enabled
+      PGPASSWORD: osmtileserver
+    command: run
+  # command: ['import', 'run']
+    networks:
+      - common
+
+  osrm-walking:
+    container_name: osrm-walking
+    build:
+      context: ${DOCKER_FILES_BASE}/osrm-walking
+  # command: osrm-routed --algorithm mld /data/bangladesh-latest.osrm
+  # volumes:
+  # - ${VOL_BASE}/vol-osrm-walking/data:/data
+    ports:
+      - "5001:5000"
+    networks:
+      - common
+  osrm-bicycle:
+    container_name: osrm-bicycle
+    build:
+      context: ${DOCKER_FILES_BASE}/osrm-bicycle
+  # command: osrm-routed --algorithm mld /data/bangladesh-latest.osrm
+  # volumes:
+  #   - ${VOL_BASE}/vol-osrm-bicycle/data:/data    
+    ports:
+      - "5002:5000"
+    networks:
+      - common
+  osrm-car:
+    container_name: osrm-car
+    build:
+      context: ${DOCKER_FILES_BASE}/osrm-car
+  # command: osrm-routed --algorithm mld /data/bangladesh-latest.osrm
+    # volumes:
+    #   - ${VOL_BASE}/vol-osrm-car/data:/data
+    ports:
+      - "5003:5000"
+    networks:
+      - common    
+
+  overpass_api:
+    container_name: overpass_api
+    image: wiktorn/overpass-api
+    environment:
+      - OVERPASS_META=yes
+      - OVERPASS_MODE=init
+      - OVERPASS_PLANET_URL=https://download.geofabrik.de/asia/bangladesh-latest.osm.bz2
+      - OVERPASS_RATE_LIMIT=1000
+    volumes:
+      - ${VOL_BASE}/vol-overpass/:/db
+    ports:
+      - "12345:80"
+    restart: always
 
   pgadmin:
     image: dpage/pgadmin4
@@ -148,28 +186,6 @@ services:
     networks:
       - common
 
-  rabbitmq:
-    image: rabbitmq:3.8-management-alpine
-    container_name: 'rabbitmq'
-    restart: unless-stopped
-    environment: 
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER-rabbit}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS-rabbit}
-      RABBITMQ_DEFAULT_VHOST: 'vhost'
-    deploy:
-      resources:
-        limits:
-          memory: 150M
-          cpus: '2.0'
-    ports:
-      - '0.0.0.0:5672:5672'
-      - '0.0.0.0:15672:15672'
-    volumes:
-      - ${VOL_BASE}/vol-rabbitmq/data:/var/lib/rabbitmq/
-      - ${VOL_BASE}/vol-rabbitmq/log/:/var/log/rabbitmq/
-    networks:
-      - common
-
   redis-7-insight:
     image: redislabs/redisinsight:latest
     container_name: redis-7-insight
@@ -185,6 +201,8 @@ services:
           cpus: '0.5'
     volumes:
       - ${VOL_BASE}/vol-redis-7-insight:/data
+    networks:
+      - common  
     
   redis-7:
     image: redis:7
@@ -199,6 +217,9 @@ services:
           cpus: '1.0'
     volumes:
       - ${VOL_BASE}/vol-redis-7:/data
+    networks:
+      - common
+        
     
 
 networks:

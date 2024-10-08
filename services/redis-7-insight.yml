@@ -13,4 +13,6 @@ redis-7-insight:
         cpus: '0.5'
   volumes:
     - ${VOL_BASE}/vol-redis-7-insight:/data
+  networks:
+    - common  
     

@@ -16,3 +16,5 @@ mongodb-7-express:
         cpus: '0.5'
   depends_on:
     - mongodb-7
+  networks:
+    - common

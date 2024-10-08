@@ -24,18 +24,3 @@ kafka:
     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
-lenses:
-  image: lensesio/lenses:latest
-  container_name: lenses
-  ports:
-    - '8008:8080'
-    - '9991:9991'
-    - '9102:9102'
-  environment:
-    LENSES_KAFKA_BROKERS: "PLAINTEXT://broker.1.url:9092,PLAINTEXT://broker.2.url:9092"
-    LENSES_KAFKA_ZOOKEEPER: zookeeper:2181
-    LENSES_SECURITY_USER: admin
-    LENSES_SECURITY_PASSWORD: admin #sha256:8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
-  depends_on:
-    - kafka
-    - zookeeper
