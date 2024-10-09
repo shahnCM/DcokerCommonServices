@@ -11,3 +11,6 @@ overpass_api:
   ports:
     - "12345:80"
   restart: always
+  networks:
+    - common    
+      

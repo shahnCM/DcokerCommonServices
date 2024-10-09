@@ -25,8 +25,8 @@ osrm-car:
   build:
     context: ${DOCKER_FILES_BASE}/osrm-car
 # command: osrm-routed --algorithm mld /data/bangladesh-latest.osrm
-# volumes:
-#   - ${VOL_BASE}/vol-osrm-car/data:/data
+  volumes:
+    - ${VOL_BASE}/vol-osrm-car/data:/mounted-data
   ports:
     - "5003:5000"
   networks:
